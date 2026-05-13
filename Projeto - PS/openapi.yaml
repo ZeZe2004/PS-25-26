@@ -1,0 +1,378 @@
+openapi: 3.0.3
+info:
+  title: GREENHERB API
+  version: 1.0.0
+  description: Plataforma Web de Gestão Inteligente de uma Estufa de ervas aromáticas.
+  contact:
+    name: Equipa GREENHERB
+
+servers:
+  - url: http://localhost:3000/api
+    description: Servidor de Desenvolvimento (Local)
+
+paths:
+  /ervas:
+    get:
+      summary: Lista todas as ervas aromáticas
+      responses:
+        '200':
+          description: Lista de ervas obtida com sucesso.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ErvaAromatica'
+    post:
+      summary: Regista uma nova erva aromática
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErvaAromaticaInput'
+      responses:
+        '201':
+          description: Erva aromática criada com sucesso.
+
+  /planos:
+    get:
+      summary: Lista os planos de cultivo
+      responses:
+        '200':
+          description: Lista de planos obtida com sucesso.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlanoCultivo'
+    post:
+      summary: Regista um novo plano de cultivo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanoCultivoInput'
+      responses:
+        '201':
+          description: Plano de cultivo criado com sucesso.
+
+  /lotes:
+    get:
+      summary: Lista os lotes de cultivo
+      responses:
+        '200':
+          description: Lotes obtidos com sucesso.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LoteCultivo'
+    post:
+      summary: Cria um novo lote de cultivo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoteCultivoInput'
+      responses:
+        '201':
+          description: Lote criado com sucesso.
+
+  /medicoes:
+    get:
+      summary: Consulta o histórico de medições ambientais
+      responses:
+        '200':
+          description: Histórico obtido com sucesso.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MedicaoAmbiental'
+    post:
+      summary: Regista uma nova medição ambiental
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MedicaoAmbiental'
+      responses:
+        '201':
+          description: Medição registada. Pode originar alertas.
+        '400':
+          description: Dados inválidos.
+
+  /tarefas:
+    get:
+      summary: Consulta tarefas e intervenções (rega, fertilização, etc.)
+      responses:
+        '200':
+          description: Lista de tarefas obtida com sucesso.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tarefa'
+    post:
+      summary: Regista uma nova tarefa
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TarefaInput'
+      responses:
+        '201':
+          description: Tarefa registada.
+
+  /alertas:
+    get:
+      summary: Lista alertas gerados pelo sistema
+      responses:
+        '200':
+          description: Alertas obtidos com sucesso.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Alerta'
+                  
+  /alertas/{id}:
+    patch:
+      summary: Atualiza o estado de um alerta (resolver/ignorar)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertaUpdate'
+      responses:
+        '200':
+          description: Alerta atualizado.
+
+  /logs:
+    get:
+      summary: Consulta os logs de auditoria
+      responses:
+        '200':
+          description: Logs obtidos com sucesso.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LogAuditoria'
+
+components:
+  schemas:
+    ErvaAromatica:
+      type: object
+      properties:
+        id:
+          type: string
+        nome:
+          type: string
+          example: "Manjericão"
+        especie:
+          type: string
+          
+    ErvaAromaticaInput:
+      type: object
+      required:
+        - nome
+      properties:
+        nome:
+          type: string
+        especie:
+          type: string
+
+    PlanoCultivo:
+      type: object
+      properties:
+        id:
+          type: string
+        ervaId:
+          type: string
+        tipo:
+          type: string
+          enum: [regular, emergencia, pontual]
+        parametrosIdeais:
+          type: object
+          properties:
+            tempMin:
+              type: number
+            tempMax:
+              type: number
+            humidadeMin:
+              type: number
+            humidadeMax:
+              type: number
+
+    PlanoCultivoInput:
+      type: object
+      required:
+        - ervaId
+        - tipo
+      properties:
+        ervaId:
+          type: string
+        tipo:
+          type: string
+          enum: [regular, emergencia, pontual]
+        parametrosIdeais:
+          type: object
+          properties:
+            tempMin:
+              type: number
+            tempMax:
+              type: number
+            humidadeMin:
+              type: number
+            humidadeMax:
+              type: number
+
+    LoteCultivo:
+      type: object
+      properties:
+        id:
+          type: string
+        planoId:
+          type: string
+        estado:
+          type: string
+          enum: [ativo, concluido, comprometido]
+        dataInicio:
+          type: string
+          format: date-time
+        modoControlo:
+          type: string
+          enum: [manual, automatico]
+
+    LoteCultivoInput:
+      type: object
+      required:
+        - planoId
+        - estado
+      properties:
+        planoId:
+          type: string
+        estado:
+          type: string
+          enum: [ativo, concluido, comprometido]
+        modoControlo:
+          type: string
+          enum: [manual, automatico]
+
+    MedicaoAmbiental:
+      type: object
+      required:
+        - loteId
+        - temperatura
+        - humidade
+        - luminosidade
+      properties:
+        id:
+          type: string
+        loteId:
+          type: string
+        temperatura:
+          type: number
+        humidade:
+          type: number
+        luminosidade:
+          type: number
+        dataHora:
+          type: string
+          format: date-time
+
+    Tarefa:
+      type: object
+      properties:
+        id:
+          type: string
+        loteId:
+          type: string
+        tipo:
+          type: string
+          enum: [rega, fertilizacao, colheita, monitorizacao]
+        estado:
+          type: string
+          enum: [pendente, executada]
+        dataPrevista:
+          type: string
+          format: date-time
+
+    TarefaInput:
+      type: object
+      required:
+        - loteId
+        - tipo
+      properties:
+        loteId:
+          type: string
+        tipo:
+          type: string
+          enum: [rega, fertilizacao, colheita, monitorizacao]
+        dataPrevista:
+          type: string
+          format: date-time
+
+    Alerta:
+      type: object
+      properties:
+        id:
+          type: string
+        loteId:
+          type: string
+        classificacao:
+          type: string
+          enum: [informativo, aviso, critico]
+        mensagem:
+          type: string
+        estado:
+          type: string
+          enum: [ativo, resolvido, ignorado]
+        justificacao:
+          type: string
+
+    AlertaUpdate:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          enum: [resolvido, ignorado]
+        justificacao:
+          type: string
+          description: Obrigatório caso o estado seja 'ignorado'
+
+    LogAuditoria:
+      type: object
+      properties:
+        id:
+          type: string
+        utilizadorId:
+          type: string
+        acao:
+          type: string
+        entidadeAfetada:
+          type: string
+        dataHora:
+          type: string
+          format: date-time
